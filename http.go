@@ -216,3 +216,34 @@ func interfacesHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, result)
 	}
 }
+
+func ipsHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	iface := vars["interface"]
+	ip := strings.Replace(vars["ip"], "-", "/", -1)
+	var err error
+	code := http.StatusBadRequest
+	var result interface{}
+
+	switch r.Method {
+	case "GET":
+		result, err = network.GetAddress(ip, iface)
+	case "PUT":
+		result, err = network.AddAddress(ip, iface)
+	case "DELETE":
+		err = network.DeleteAddress(ip, iface)
+	}
+
+	if err != nil {
+		if strings.Contains(err.Error(), "Cannot find") ||
+			strings.Contains(err.Error(), "Cannot assign requested address") ||
+			strings.Contains(err.Error(), "does not exist") {
+			code = http.StatusNotFound
+		} else if strings.Contains(err.Error(), "File exists") {
+			code = http.StatusConflict
+		}
+		writeErrorWithCode(w, err, code)
+	} else {
+		writeJSON(w, result)
+	}
+}

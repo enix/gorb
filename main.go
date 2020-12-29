@@ -119,6 +119,7 @@ func main() {
 	r.Handle("/service/{vsID}", serviceStatusHandler{ctx}).Methods("GET")
 	r.Handle("/service/{vsID}/{rsID}", backendStatusHandler{ctx}).Methods("GET")
 	r.HandleFunc("/network/{interface}", interfacesHandler).Methods("GET", "PUT", "DELETE")
+	r.HandleFunc("/network/{interface}/{ip}", ipsHandler).Methods("GET", "PUT", "DELETE")
 	r.Handle("/metrics", promhttp.Handler()).Methods("GET")
 
 	log.Infof("setting up HTTP server on %s", *listen)

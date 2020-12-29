@@ -2,6 +2,7 @@ package network
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -31,7 +32,38 @@ type InterfaceInfo struct {
 	Address     string        `json:"address"`
 	Broadcast   string        `json:"broadcast"`
 	AddressInfo []AddressInfo `json:"addr_info"`
-	AddressInfo []AddressInfo
+}
+
+// GetAddress get an ip address from an interface
+func GetAddress(ip string, ifaceName string) (*AddressInfo, error) {
+	ifaceInfo, err := GetInterface(ifaceName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, addressInfo := range ifaceInfo.AddressInfo {
+		if ip == fmt.Sprintf("%s/%d", addressInfo.Local, addressInfo.PrefixLen) {
+			return &addressInfo, nil
+		}
+	}
+
+	return nil, errors.New("Address not found")
+}
+
+// AddAddress attaches an ip address on an interface
+func AddAddress(ip string, ifaceName string) (*AddressInfo, error) {
+	if _, err := ipAddress("add", ip, "dev", ifaceName); err != nil {
+		return nil, err
+	}
+
+	return GetAddress(ip, ifaceName)
+}
+
+// DeleteAddress detaches an ip address from an interface
+func DeleteAddress(ip string, ifaceName string) error {
+	_, err := ipAddress("delete", ip, "dev", ifaceName)
+	return err
 }
 
 // GetInterface get an interface
@@ -53,6 +85,10 @@ func GetInterface(ifaceName string) (*InterfaceInfo, error) {
 // AddInterface create an interface
 func AddInterface(name string, interfaceType string) (*InterfaceInfo, error) {
 	if _, err := ipLink("add", name, "type", interfaceType); err != nil {
+		return nil, err
+	}
+
+	if _, err := ipLink("set", name, "up"); err != nil {
 		return nil, err
 	}
 
