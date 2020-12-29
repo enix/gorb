@@ -23,8 +23,10 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/kobolog/gorb/core"
+	"github.com/kobolog/gorb/network"
 	"github.com/kobolog/gorb/util"
 
 	"github.com/gorilla/mux"
@@ -53,6 +55,10 @@ func writeError(w http.ResponseWriter, err error) {
 		code = http.StatusBadRequest
 	}
 
+	writeErrorWithCode(w, err, code)
+}
+
+func writeErrorWithCode(w http.ResponseWriter, err error, code int) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(util.MustMarshal(&errorResponse{err.Error()}, util.JSONOptions{Indent: true}))
@@ -170,5 +176,43 @@ func (h backendStatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		writeError(w, err)
 	} else {
 		writeJSON(w, opts)
+	}
+}
+
+func interfacesHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	interfaceName := vars["interface"]
+	var err error
+	code := http.StatusBadRequest
+	var result interface{}
+
+	switch r.Method {
+	case "GET":
+		result, err = network.GetInterface(interfaceName)
+		if err != nil && strings.Contains(err.Error(), "does not exist") {
+			code = http.StatusNotFound
+		}
+	case "PUT":
+		opts := map[string]string{}
+		if err := json.NewDecoder(r.Body).Decode(&opts); err != nil {
+			writeError(w, err)
+			return
+		}
+
+		result, err = network.AddInterface(interfaceName, opts["type"])
+		if err != nil && strings.Contains(err.Error(), "File exists") {
+			code = http.StatusConflict
+		}
+	case "DELETE":
+		err = network.DeleteInterface(interfaceName)
+		if err != nil && strings.Contains(err.Error(), "Cannot find") {
+			code = http.StatusNotFound
+		}
+	}
+
+	if err != nil {
+		writeErrorWithCode(w, err, code)
+	} else {
+		writeJSON(w, result)
 	}
 }
