@@ -3,12 +3,13 @@ package core
 import (
 	"testing"
 
-	"github.com/kobolog/gorb/pulse"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/assert"
-	"github.com/tehnerd/gnl2go"
 	"syscall"
+
 	"github.com/kobolog/gorb/disco"
+	"github.com/kobolog/gorb/pulse"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/tehnerd/gnl2go"
 )
 
 type fakeDisco struct {
@@ -86,13 +87,13 @@ func newContext(ipvs Ipvs, disco disco.Driver) *Context {
 		backends: make(map[string]*backend),
 		pulseCh:  make(chan pulse.Update),
 		stopCh:   make(chan struct{}),
-		disco: disco,
+		disco:    disco,
 	}
 }
 
 var (
-	vsID = "virtualServiceId"
-	rsID = "realServerID"
+	vsID           = "virtualServiceId"
+	rsID           = "realServerID"
 	virtualService = service{options: &ServiceOptions{Port: 80, Host: "localhost", Protocol: "tcp"}}
 )
 
@@ -117,7 +118,7 @@ func TestServiceIsCreatedWithShFlags(t *testing.T) {
 	mockDisco := &fakeDisco{}
 	c := newContext(mockIpvs, mockDisco)
 
-	mockIpvs.On("AddServiceWithFlags", "127.0.0.1", uint16(80), uint16(syscall.IPPROTO_TCP), "sh", gnl2go.U32ToBinFlags(gnl2go.IP_VS_SVC_F_SCHED_SH_FALLBACK | gnl2go.IP_VS_SVC_F_SCHED_SH_PORT)).Return(nil)
+	mockIpvs.On("AddServiceWithFlags", "127.0.0.1", uint16(80), uint16(syscall.IPPROTO_TCP), "sh", gnl2go.U32ToBinFlags(gnl2go.IP_VS_SVC_F_SCHED_SH_FALLBACK|gnl2go.IP_VS_SVC_F_SCHED_SH_PORT)).Return(nil)
 	mockDisco.On("Expose", vsID, "127.0.0.1", uint16(80)).Return(nil)
 
 	err := c.createService(vsID, options)
@@ -128,7 +129,7 @@ func TestServiceIsCreatedWithShFlags(t *testing.T) {
 
 func TestPulseUpdateSetsBackendWeightToZeroOnStatusDown(t *testing.T) {
 	stash := make(map[pulse.ID]int32)
-	backends := map[string]*backend{rsID: &backend{service: &virtualService, options: &BackendOptions{Weight:100}}}
+	backends := map[string]*backend{rsID: &backend{service: &virtualService, options: &BackendOptions{Weight: 100}}}
 	mockIpvs := &fakeIpvs{}
 
 	c := newRoutineContext(backends, mockIpvs)
@@ -150,7 +151,7 @@ func TestPulseUpdateIncreasesBackendWeightRelativeToTheHealthOnStatusUp(t *testi
 
 	mockIpvs.On("UpdateDestPort", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, int32(6), mock.Anything).Return(nil)
 
-	c.processPulseUpdate(stash, pulse.Update{pulse.ID{VsID: vsID, RsID: rsID}, pulse.Metrics{Status: pulse.StatusUp, Health:0.5}})
+	c.processPulseUpdate(stash, pulse.Update{pulse.ID{VsID: vsID, RsID: rsID}, pulse.Metrics{Status: pulse.StatusUp, Health: 0.5}})
 	assert.Equal(t, len(stash), 1)
 	assert.Equal(t, stash[pulse.ID{VsID: vsID, RsID: rsID}], int32(12))
 	mockIpvs.AssertExpectations(t)
@@ -165,7 +166,7 @@ func TestPulseUpdateRemovesStashWhenBackendHasFullyRecovered(t *testing.T) {
 
 	mockIpvs.On("UpdateDestPort", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, int32(12), mock.Anything).Return(nil)
 
-	c.processPulseUpdate(stash, pulse.Update{pulse.ID{VsID: vsID, RsID: rsID}, pulse.Metrics{Status: pulse.StatusUp, Health:1}})
+	c.processPulseUpdate(stash, pulse.Update{pulse.ID{VsID: vsID, RsID: rsID}, pulse.Metrics{Status: pulse.StatusUp, Health: 1}})
 	assert.Empty(t, stash)
 	mockIpvs.AssertExpectations(t)
 }
@@ -201,7 +202,7 @@ func TestServiceIsCreatedWithGenericCustomFlags(t *testing.T) {
 	c := newContext(mockIpvs, mockDisco)
 
 	mockIpvs.On("AddServiceWithFlags", "127.0.0.1", uint16(80), uint16(syscall.IPPROTO_TCP), "sh",
-		gnl2go.U32ToBinFlags(gnl2go.IP_VS_SVC_F_SCHED1 | gnl2go.IP_VS_SVC_F_SCHED2 | gnl2go.IP_VS_SVC_F_SCHED3)).Return(nil)
+		gnl2go.U32ToBinFlags(gnl2go.IP_VS_SVC_F_SCHED1|gnl2go.IP_VS_SVC_F_SCHED2|gnl2go.IP_VS_SVC_F_SCHED3)).Return(nil)
 	mockDisco.On("Expose", vsID, "127.0.0.1", uint16(80)).Return(nil)
 
 	err := c.createService(vsID, options)

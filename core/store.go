@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"encoding/json"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/libkv"
 	"github.com/docker/libkv/store"

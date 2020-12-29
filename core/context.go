@@ -31,24 +31,25 @@ import (
 	"github.com/kobolog/gorb/util"
 	"github.com/vishvananda/netlink"
 
+	"strings"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/tehnerd/gnl2go"
-	"strings"
 )
 
 // Possible runtime errors.
 var (
 	schedulerFlags = map[string]int{
 		"sh-fallback": gnl2go.IP_VS_SVC_F_SCHED_SH_FALLBACK,
-		"sh-port": gnl2go.IP_VS_SVC_F_SCHED_SH_PORT,
-		"flag-1": gnl2go.IP_VS_SVC_F_SCHED1,
-		"flag-2": gnl2go.IP_VS_SVC_F_SCHED2,
-		"flag-3": gnl2go.IP_VS_SVC_F_SCHED3,
+		"sh-port":     gnl2go.IP_VS_SVC_F_SCHED_SH_PORT,
+		"flag-1":      gnl2go.IP_VS_SVC_F_SCHED1,
+		"flag-2":      gnl2go.IP_VS_SVC_F_SCHED2,
+		"flag-3":      gnl2go.IP_VS_SVC_F_SCHED3,
 	}
 	ErrIpvsSyscallFailed = errors.New("error while calling into IPVS")
-	ErrObjectExists = errors.New("specified object already exists")
-	ErrObjectNotFound = errors.New("unable to locate specified object")
-	ErrIncompatibleAFs = errors.New("incompatible address families")
+	ErrObjectExists      = errors.New("specified object already exists")
+	ErrObjectNotFound    = errors.New("unable to locate specified object")
+	ErrIncompatibleAFs   = errors.New("incompatible address families")
 )
 
 type service struct {

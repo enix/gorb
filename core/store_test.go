@@ -3,10 +3,10 @@ package core
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/docker/libkv"
-	libkvmock "github.com/docker/libkv/store/mock"
 	"github.com/docker/libkv/store"
+	libkvmock "github.com/docker/libkv/store/mock"
+	"github.com/stretchr/testify/assert"
 )
 
 type storeMock struct {
